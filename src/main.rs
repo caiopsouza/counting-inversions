@@ -1,53 +1,62 @@
 fn merge_and_count(a: Vec<u32>, b: Vec<u32>) -> (usize, Vec<u32>) {
-    let mut inversions = 0usize;
     let len = a.len() + b.len();
+
+    // Manter um vetor de resultado e um ponteiro para o próximo elemento
     let mut l = vec![0; len];
-
     let mut i = 0usize;
-    let mut ia = 0usize;
-    let mut ib = 0usize;
 
-    // Merge
-    while ia < a.len() && ib < b.len() {
-        if a[ia] <= b[ib] {
-            l[i] = a[ia];
-            ia += 1;
+    // Manter um ponteiro atual em cada lista, inicializado para apontar para os elementos da frente
+    let mut ai = 0usize;
+    let mut bj = 0usize;
+
+    let mut inversions = 0usize; // Mantenha uma variável contador para o número de inversões, inicializado em 0
+
+    // Enquanto ambas as listas não estejam vazias:
+    while ai < a.len() && bj < b.len() {
+        // Sejam ai_elem e bj_elem os elementos apontados pelo ponteiro Atual
+        let ai_elem = a[ai];
+        let bj_elem = b[bj];
+
+        if ai_elem <= bj_elem {
+            l[i] = a[ai]; // Anexe o menor desses dois à lista de saída
+            ai += 1; // Avança o ponteiro Atual na lista da qual o elemento menor foi selecionado.
         } else {
-            inversions += a.len() - ia;
-            l[i] = b[ib];
-            ib += 1;
+            // Se bj for o elemento menor, então
+            l[i] = b[bj]; // Anexe o menor desses dois à lista de saída
+            bj += 1; // Avança o ponteiro Atual na lista da qual o elemento menor foi selecionado.
+            inversions += a.len() - ai; // Aumente a contagem pelo número de elementos restantes em A
         }
         i += 1;
     }
 
-    // Copy the rest of the list
+    // Quando uma lista estiver vazia, acrescente o restante da outra lista ao resultado
     let dst = &mut l[i..len];
-
-    if ia < a.len() {
-        dst.copy_from_slice(&a[ia..a.len()]);
+    if ai < a.len() {
+        dst.copy_from_slice(&a[ai..a.len()]);
     } else {
-        dst.copy_from_slice(&b[ib..b.len()]);
+        dst.copy_from_slice(&b[bj..b.len()]);
     }
 
+    // Retorne a Contagem e lista mesclada
     (inversions, l)
 }
 
 fn sort_and_count(l: &[u32]) -> (usize, Vec<u32>) {
-    if l.len() == 0 {
-        return (0, vec![]);
+    if l.len() == 1 { // Se a lista tiver um elemento, então
+        return (0, vec![l[0]]); // não há inversões
     }
 
-    if l.len() == 1 {
-        return (0, vec![l[0]]);
-    }
+    let middle = l.len() / 2; // Divida a lista em duas metades:
 
-    let middle = l.len() / 2;
+    let a = &l[0..middle]; // A contém os primeiros [n / 2] elementos
+    let b = &l[middle..l.len()]; // B contém os [n / 2] elementos restantes
 
-    let (ra, a) = sort_and_count(&l[0..middle]);
-    let (rb, b) = sort_and_count(&l[middle..l.len()]);
+    let (ra, a) = sort_and_count(a); // (𝑟𝐴, A) = Classificar e Contar (A)
+    let (rb, b) = sort_and_count(b); // (𝑟𝐵, B) = Classificar e Contar (B)
 
-    let (r, ml) = merge_and_count(a, b);
-    (r + ra + rb, ml)
+    let (r, ml) = merge_and_count(a, b); // (r, L) = Mesclar e contar (A, B
+
+    (r + ra + rb, ml) // Retorne r = 𝑟𝐴+ 𝑟𝐵+ r, e a lista classificada L
 }
 
 fn naive_count(a: &[u32]) -> usize {
